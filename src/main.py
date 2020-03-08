@@ -16,12 +16,33 @@ import numpy as np
 
 
 def spherical_to_cartesian(r, psi, theta):
+    """
+    Convert a set of spherical coordinates to cartesian.
+
+    Parameters
+    ----------
+    r : float
+        Radial Distance.
+    psi : float
+        Azimuthial angle.
+    theta : float
+        Polar angle.
+
+    """
     x = r * np.sin(psi) * np.cos(theta)
     y = r * np.sin(psi) * np.sin(theta)
     z = r * np.cos(psi)
     return x, y, z
 
 def cartesian_to_spherical(x,y,z):
+    """
+    Convert a set of cartesian coordinates to Spherical.
+
+    Parameters
+    ----------
+    x, y, z : float
+        Coordinates.
+    """
     r = np.sqrt(x**2 + y**2 + z**2)
     psi = np.arccos(z/r)
     theta = np.arctan(y/x)
@@ -39,6 +60,14 @@ def distance_between(v1, v2, spherical=False):
         v2 = (r2, psi2, theta2)
         
     |v1 - v2| = sqrt[(x1-x2)^2 + (y1-y2)^2 + (z1-z2)^2]
+
+    Parameters
+    ----------
+    v1, v2 : 1d arrays
+        Vector values.
+
+    spherical : bool
+        Use input coordinates in spherical coords.
     """
     if spherical:
         x1, y1, z1 = spherical_to_cartesian(*v1)
@@ -53,11 +82,26 @@ def distance_between(v1, v2, spherical=False):
 
 
     
+class shape:
+    def __init__(self):
+        self.coords = None
+
+
+3d_line = np.array([[0,1,0],
+                    [2,2,2],
+                    [4,5,6]])
+
+class cone:
+
+
 
 fig = plt.figure()
 ax = fig.add_subplot(111, projection='3d')
 
-psi = 10 * 360/2*np.pi # Opening angle in rads
+
+opening_angle = 10
+
+psi = opening_angle * np.pi/180 # Opening angle in rads
 number_of_anuli = 30   # Number of Annuli in Z
 z_height = 10          # Total height of the cone in Z
 
@@ -70,13 +114,15 @@ P = [8 * np.sin(psi) * np.cos(0),
 
 
 #Plot concentric rings at each annulus
-for r in np.linspace(0, z_height, number_of_anuli):
-    print(f'height: {r}')
-    x = r * np.sin(psi) * np.cos(theta_range)
-    y = r * np.sin(psi) * np.sin(theta_range)
-    z = r * np.cos(psi)
-    v2 = [x, y, z]
-    ax.plot(x, y, z)
+# for r in np.linspace(0, z_height, number_of_anuli):
+r =  np.linspace(0, z_height, number_of_anuli)
+
+# print(f'height: {r}')
+x = r * np.sin(psi) * np.cos(theta_range)
+y = r * np.sin(psi) * np.sin(theta_range)
+z = r * np.cos(psi)
+v2 = [x, y, z]
+ax.plot_wireframe(x, y, z)
     
     
 
