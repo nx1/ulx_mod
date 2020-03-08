@@ -8,8 +8,6 @@ theta : azimuthial angle
 https://en.wikipedia.org/wiki/Spherical_coordinate_system
 
 """
-# This import registers the 3D projection, but is otherwise unused.
-from mpl_toolkits.mplot3d import Axes3D  # noqa: F401 unused import
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -80,24 +78,15 @@ def distance_between(v1, v2, spherical=False):
     return dist
 
 
-
     
 class shape:
     def __init__(self):
         self.coords = None
 
 
-3d_line = np.array([[0,1,0],
-                    [2,2,2],
-                    [4,5,6]])
-
-class cone:
-
-
-
 fig = plt.figure()
-ax = fig.add_subplot(111, projection='3d')
-
+ax_3d = fig.add_subplot(221, projection='3d')
+ax_top = fig.add_subplot(222)
 
 opening_angle = 10
 
@@ -105,7 +94,31 @@ psi = opening_angle * np.pi/180 # Opening angle in rads
 number_of_anuli = 30   # Number of Annuli in Z
 z_height = 10          # Total height of the cone in Z
 
-theta_range = np.linspace(0, 2*np.pi, 100) #0 to 2pi for circles
+sampling_level = 100
+
+r = np.linspace(0, z_height, sampling_level)
+theta_range = np.linspace(0, 2*np.pi, sampling_level) #0 to 2pi for circles
+
+R, T = np.meshgrid(r, theta_range)
+
+
+x = R * np.sin(psi) * np.cos(T)
+y = R * np.sin(psi) * np.sin(T)
+z = R * np.cos(psi)
+
+v2 = [x, y, z]
+
+
+
+ax_3d.plot_wireframe(x, y, z)
+
+
+ax_top.plot() #The -1th array will correspnd to the top of our cone
+    
+    
+
+
+
 
 # P is a point inside and on our cone
 P = [8 * np.sin(psi) * np.cos(0),
@@ -113,27 +126,12 @@ P = [8 * np.sin(psi) * np.cos(0),
      8 * np.cos(psi)]
 
 
-#Plot concentric rings at each annulus
-# for r in np.linspace(0, z_height, number_of_anuli):
-r =  np.linspace(0, z_height, number_of_anuli)
 
-# print(f'height: {r}')
-x = r * np.sin(psi) * np.cos(theta_range)
-y = r * np.sin(psi) * np.sin(theta_range)
-z = r * np.cos(psi)
-v2 = [x, y, z]
-ax.plot_wireframe(x, y, z)
-    
-    
+ax_3d.scatter(*P, label='P')
 
-
-
-
-ax.scatter(*P, label='P')
-
-ax.set_xlabel('X')
-ax.set_ylabel('Y')
-ax.set_zlabel('Z')
+ax_3d.set_xlabel('X')
+ax_3d.set_ylabel('Y')
+ax_3d.set_zlabel('Z')
 
 plt.legend()
 plt.show()
