@@ -1,16 +1,22 @@
 """
+Created on Mon Mar  9 14:25:23 2020
+
+@author: Norman Khan ~nk7g14 
 Conical ULX model.
 
+We use the following convention as commonly used in physics
 
-We use the following convention
-psi : polar angle
-theta : azimuthial angle
+psi : polar angle (angle to the z axis)
+theta : azimuthial angle (angle to the x axis)
+
 https://en.wikipedia.org/wiki/Spherical_coordinate_system
-
 """
 
 import matplotlib.pyplot as plt
 import numpy as np
+
+# 3-D plotting will not work without the following input
+from mpl_toolkits.mplot3d import Axes3D
 
 
 def spherical_to_cartesian(r, psi, theta):
@@ -77,61 +83,147 @@ def distance_between(v1, v2, spherical=False):
     dist = np.sqrt((x1-x2)^2 + (y1-y2)^2 + (z1-z2)^2)
     return dist
 
-
+def create_cone_mesh(r, theta, psi):
+    """
+    Create cone mesh for plotting purposes
     
-class shape:
-    def __init__(self):
-        self.coords = None
+    Parameters
+    ----------
+    r : 1d array
+        Radial distances over to create the cone.
+    theta : 1d array
+        Azimuthal angles over which to create the cone (0 - 2pi).
+    psi : float
+        Polar coordinate, fixed for a cone.
+    """
+    
+    R, T = np.meshgrid(r, theta)
+    
+    x = R * np.sin(psi) * np.cos(T)
+    y = R * np.sin(psi) * np.sin(T)
+    z = R * np.cos(psi)
+    return x, y, z
+    
+def create_line(*args):
+    """
+    Create line joining parsed vectors.
+    
+    Parameters
+    ----------
+    *args : 1d-array-like
+        parsed vectors in the form v = [x, y, z]
+    """
+    
+    xs = [v[0] for v in args]
+    ys = [v[1] for v in args]
+    zs = [v[2] for v in args]
+    return xs, ys, zs
+
+def calc_inclination(observer, deg=False):
+    """
+    Calculate the inclination to the x-y plane
+    
+    Parameters
+    ----------
+    observer : 1d-array
+        Position of observer.
+    deg : bool
+        return inclination in radians or degrees.
+    """
+    
+    x_y_plane = [1,0,0] # Arbitrary vector in the x-y plane
+    
+    obs_norm = np.linalg.norm(observer)
+    obs_norm = np.linalg.norm(observer)
+    x_y_plane_norm = np.linalg.norm(x_y_plane)
+    
+    dot = np.dot(observer, x_y_plane)
+    
+    inclination = np.arccos(dot /  (obs_norm * x_y_plane_norm))
+    if deg:
+        inclination = inclination * (180 / np.pi)
+    return inclination
+
+def plot():
+    # Setup figure and axes
+    fig = plt.figure(figsize=(10,10))
+    ax_3d = fig.add_subplot(221, projection='3d')
+    ax_top = fig.add_subplot(222)
+    ax_side = fig.add_subplot(223)
+    
+    # 3D
+    ax_3d.set_title('3D')
+    ax_3d.set_xlim(-10,10)
+    ax_3d.set_ylim(-10,10)
+    
+    ax_3d.plot_wireframe(x, y, z, color='black', linewidth=0.5)
+    ax_3d.scatter(*P, label='P', color='r')
+    ax_3d.scatter(*observer, label='observer', color='g')
+    ax_3d.plot(xs=xs, ys=ys, zs=zs, c='r')
+    
+    ax_3d.set_xlabel('X')
+    ax_3d.set_ylabel('Y')
+    ax_3d.set_zlabel('Z')
+    
+    # Top
+    ax_top.set_title('Top')
+    ax_top.set_xlim(-10,10)
+    ax_top.set_ylim(-10,10)
+    
+    ax_top.pcolor(x, y, z)
+    ax_top.scatter(*P, label='P', color='r')
+    ax_top.scatter(*observer, label='observer', color='g')
+    ax_top.plot(xs, ys, c='r')
+    
+    ax_top.set_xlabel('X')
+    ax_top.set_ylabel('Y')
+    
+    # Side
+    ax_side.set_title('Side')
+    ax_side.set_xlim(-10,10)
+    ax_side.set_ylim(0,10)
+    
+    ax_side.pcolor(x, z, y)
+    ax_side.scatter(P[0], P[2], label='P', color='r')
+    ax_side.scatter(observer[0], observer[2], label='observer', color='g')
+    ax_side.plot(xs, zs, c='r')
+    ax_side.set_xlabel('X')
+    ax_side.set_ylabel('Z')
+    
+    plt.show()
 
 
-fig = plt.figure()
-ax_3d = fig.add_subplot(221, projection='3d')
-ax_top = fig.add_subplot(222)
-
-opening_angle = 10
-
-psi = opening_angle * np.pi/180 # Opening angle in rads
-number_of_anuli = 30   # Number of Annuli in Z
-z_height = 10          # Total height of the cone in Z
-
-sampling_level = 100
-
-r = np.linspace(0, z_height, sampling_level)
-theta_range = np.linspace(0, 2*np.pi, sampling_level) #0 to 2pi for circles
-
-R, T = np.meshgrid(r, theta_range)
 
 
-x = R * np.sin(psi) * np.cos(T)
-y = R * np.sin(psi) * np.sin(T)
-z = R * np.cos(psi)
-
-v2 = [x, y, z]
-
-
-
-ax_3d.plot_wireframe(x, y, z)
-
-
-ax_top.plot() #The -1th array will correspnd to the top of our cone
+if __name__ == "__main__":
+    opening_angle = 40
+    
+    H = 5
+    R = 20
+    H_R = H / R
+    
+    observer = (-9, 0, 9)
+    inclination = calc_inclination(observer, deg=True)
+    
+    psi = opening_angle * np.pi/180 # Opening angle in rads
+    number_of_anuli = 30            # Number of Annuli in Z
+    r_mag = 10                      # radial distance to calculate to
+    
+    sampling_level = 100            #Number of samples to genereate for r and theta
+    
+    r = np.linspace(0, r_mag, sampling_level)
+    theta = np.linspace(0, 2*np.pi, sampling_level)
     
     
-
-
-
-
-# P is a point inside and on our cone
-P = [8 * np.sin(psi) * np.cos(0),
-     8 * np.sin(psi) * np.sin(0),
-     8 * np.cos(psi)]
-
-
-
-ax_3d.scatter(*P, label='P')
-
-ax_3d.set_xlabel('X')
-ax_3d.set_ylabel('Y')
-ax_3d.set_zlabel('Z')
-
-plt.legend()
-plt.show()
+    x, y, z = create_cone_mesh(r, theta, psi)
+    
+    
+    # P is a point on our cone
+    P = (8 * np.sin(psi) * np.cos(0),
+         8 * np.sin(psi) * np.sin(0),
+         8 * np.cos(psi))
+    
+    xs, ys, zs = create_line(P, observer)
+    
+    plot()
+    
