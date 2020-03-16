@@ -3,3 +3,15 @@ This repository contains an implementation of a Conical ULX model in python.
 For more information see:
   https://arxiv.org/pdf/1612.05035.pdf
   https://arxiv.org/pdf/1705.06488.pdf
+
+Requirements
+------------
+Shapely : https://pypi.org/project/Shapely/
+
+Current Features
+----------------
+- 3D Implementation of conical geometry
+
+Planned Features
+----------------
+- Photon scattering
