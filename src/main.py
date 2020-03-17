@@ -18,6 +18,8 @@ import numpy as np
 # 3-D plotting will not work without the following input
 from mpl_toolkits.mplot3d import Axes3D
 
+#angle conversions
+from auxil import d2r, r2d
 
 def spherical_to_cartesian(r, psi, theta):
     """
@@ -150,7 +152,8 @@ def plot():
     ax_3d = fig.add_subplot(221, projection='3d')
     ax_top = fig.add_subplot(222)
     ax_side = fig.add_subplot(223)
-    
+    ax_info = fig.add_subplot(224)
+
     # 3D
     ax_3d.set_title('3D')
     ax_3d.set_xlim(-10,10)
@@ -189,8 +192,41 @@ def plot():
     ax_side.plot(xs, zs, c='r')
     ax_side.set_xlabel('X')
     ax_side.set_ylabel('Z')
-    
+
+    #Information penel
+    plot_info(ax_info, None)
+
     plt.show()
+
+
+
+def plot_info(ax_info, info):
+    """
+    Plot information of simulation onto specified window
+    """
+    ax_info.set_title('Info')
+    ax_info.set_xticks([])
+    ax_info.set_yticks([])
+
+
+    info = {'inclination' : inclination,
+        'H' : H,
+        'R' : R,
+        r'$\theta \ / \ 2$' : opening_angle,
+        r'$\mid r \mid$' : r_mag,
+        'number_of_anuli' : sampling_level,
+        'observer' : observer,
+        'P' : P}
+
+    xpos = 0.05
+    ypos = 0.95
+
+    for k, v in info.items():
+        ax_info.text(xpos, ypos, f'{k} : {v}', horizontalalignment='left',
+                 verticalalignment='center', transform=ax_info.transAxes, fontsize=8,
+                 fontname='monospace')
+        ypos-=0.05
+
 
 
 
@@ -206,15 +242,15 @@ if __name__ == "__main__":
     inclination = calc_inclination(observer, deg=True)
     
     psi = opening_angle * np.pi/180 # Opening angle in rads
-    number_of_anuli = 30            # Number of Annuli in Z
+
     r_mag = 10                      # radial distance to calculate to
     
-    sampling_level = 100            #Number of samples to genereate for r and theta
-    
+    sampling_level = 100 #Number of samples to genereate for r and theta (number of annuli)
+
+
     r = np.linspace(0, r_mag, sampling_level)
     theta = np.linspace(0, 2*np.pi, sampling_level)
-    
-    
+
     x, y, z = create_cone_mesh(r, theta, psi)
     
     
@@ -224,6 +260,9 @@ if __name__ == "__main__":
          8 * np.cos(psi))
     
     xs, ys, zs = create_line(P, observer)
-    
+
+
+
+
     plot()
     
