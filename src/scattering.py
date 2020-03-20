@@ -7,23 +7,21 @@ from auxil import d2r, r2d #angle conversions
 
 
 class Line2D:
-    def __init___(self):
-        self.m = None
-        self.c = None
-        self.func = None
-        self.angle = None
+    def __init__(self, m, c, angle):
+        self.m = m
+        self.c = c
+        self.angle = angle
+        self.func = lambda x: self.m * x + self.c
+        self.direction = None
 
+    def __repr__(self):
+        return repr(f'Line2D : y = {self.m}x + {self.c} | angle = {r2d(self.angle)} | direction = {self.direction}')
 
     @classmethod
     def from_function(cls, m, c):
         """Create line object from gradient and y-intersection."""
-        self.m = m
-        self.c = c
-        self.func = lambda x: self.m * x + self.c
-        self.angle = np.arcsin(m)
-
-        line2d = cls(first_name, last_name)
-        return line2d
+        angle = np.arctan(m)
+        return cls(m, c, angle)
 
     @classmethod
     def from_points(cls, pos1, pos2):
@@ -34,13 +32,16 @@ class Line2D:
         ----------
         pos1, pos2 : [x, y]
         """
-        self.m = np.sin(angle)
-        self.c = c
-        self.func = lambda x: self.m * x + self.c
-        self.angle = np.arcsin(m)
+        x1, y1 = pos1
+        x2, y2 = pos2
+        print(f'pos1: {pos1}, pos2: {pos2}')
 
-        line2d = cls(first_name, last_name)
-        return line2d
+        m = abs(y2-y1) / abs(x2-x1)
+        c = y1 - m*x1
+        angle = np.arctan(m)
+
+        print(f'm: {m}, c: {c} angle: {angle}')
+        return cls(m, c, angle)
 
     @classmethod
     def from_pos_angle(cls, pos, angle):
@@ -54,14 +55,20 @@ class Line2D:
         angle : float
             Angle in radians.
         """
-        self.m = np.sin(angle)
-        self.c = c
-        self.func = lambda x: self.m * x + self.c
-        self.angle = np.arcsin(m)
+        x, y = pos
+        m = np.tan(angle)
+        c = y - m*x
+        return cls(m, c, angle)
 
-        line2d = cls(first_name, last_name)
-        return line2d
-
+    def set_x_direction(self, direction):
+        """
+        Set the direction of the line.
+        Call with no args for reset.
+        """
+        directions = {'None' : None,
+                      'x+' : +1,
+                      'x-' : -1}
+        self.direction = directions[direction]
 
     def create_data(self, start, stop, num):
         """Create datapoints between a specified range."""
@@ -70,6 +77,26 @@ class Line2D:
 
     def plot(self, **kwargs):
         plt.plot(self.xdata, self.ydata, **kwargs)
+
+    def reflect(self, Line2D):
+        """
+        Calculate new path after reflection off a line.
+
+        Parameters
+        ----------
+        Line2D : Line2D
+            Boundry to reflect off.
+
+        Returns
+        -------
+        direction
+
+        """
+        if self.direction == None:
+            print(f'{Line2D} has no direction!')
+
+
+        return Line2D
 
 
 def calc_gradient(angle, deg=False):
@@ -99,14 +126,65 @@ def calc_trajectory(x, y, angle):
     """
     m = calc_gradient(angle, deg=True)
     c = -m*x
-    trajectory = Line2D(m=m, c=c)
+    trajectory = Line2D.from_function(m=m, c=c)
     return trajectory
 
 
-def calc_scattering(starting_trajectory, N):
-    trajectory = starting_trajectory
-    scattering_positions = []
-    angle = 0
+# scattering_positions = [[x,y]], [x1,y1] + ...
+# scattering_lines = [Line2D, Line2D] + ...
+
+def calc_scattering(Line2D, N):
+    for i in range(N):
+        scattering_positions = calc_scattering_positions(Line2D, N)
+        scattering_paths = calc_scattering_path(Line2D, N)
+
+
+def calc_scattering_positions(Line2D, N, keep=True):
+    """
+    Parameters
+    ----------
+    Line2D : Line2D
+        Starting path
+    N : int
+        Nth scatter
+    keep : bool
+        Return all scatters or just last.
+
+    Returns
+    -------
+    scattering_position : list
+        [x,y]
+    """
+    traj = Line2D
+
+    l1
+
+    traj = l3_traj
+    traj.set_x_direction('x+')
+    t.plot()
+
+    l1_int = find_intersection(traj, l1)
+    l2_int = find_intersection(traj, l2)
+
+    collisions = determine_collision(l1_int, l2_int)
+
+    calc_new_path = Line2D.reflect(l1_int)
+
+
+    plt.scatter(*scattering_positions[0])
+    plt.scatter(*scattering_positions[1])
+
+    l1.plot()
+    l2.plot()
+    l3_traj.plot()
+
+    if keep:
+        return scattering_positions
+    else:
+        return scattering_positions[-1]
+# =============================================================================
+#
+# =============================================================================
     for n in range(N):
         print(f'Scattering #{n}')
 
@@ -116,8 +194,8 @@ def calc_scattering(starting_trajectory, N):
         print('l1 intersection:', l1_int)
         print('l2 intersection:', l2_int)
 
-        plt.scatter(*l1_int, label='l1_intersection')
-        plt.scatter(*l2_int, label='l2_intersection')
+        # plt.scatter(*l1_int, label='l1_intersection')
+        # plt.scatter(*l2_int, label='l2_intersection')
 
         angle = angle_between(trajectory, l2)
         print('old trajectory angle:', trajectory.angle)
@@ -128,15 +206,23 @@ def calc_scattering(starting_trajectory, N):
 
         print('new_angle:', angle)
 
-        trajectory = calc_trajectory(*l1_int, angle)
+        trajectory = Line2D.from_pos_angle(l1_int, angle)
 
         scattering_positions.append(l1_int)
         trajectory.create_data(start=l1_int[0], stop=50, num=100)
         trajectory.plot(label='traj')
         print(f'Trajectory {trajectory}')
+        print('=======')
 
-    return scattering_positions
+    return scattering_position
 
+
+
+
+
+# =============================================================================
+#
+# =============================================================================
 def calc_new_angle(angle, by):
     return angle + by
 
@@ -212,8 +298,8 @@ def plot():
     plt.show()
 
 
-l1 = Line2D(m=1, c=0)
-l2 = Line2D(m=0.25, c=0)
+l1 = Line2D.from_function(m=1, c=0)
+l2 = Line2D.from_function(m=0.25, c=0)
 
 l1.create_data(start=0, stop=50, num=100)
 l2.create_data(start=0, stop=50, num=100)
@@ -222,10 +308,17 @@ starting_pos = [3, l2.func(3)]
 
 starting_angle = 30 #degs
 
-l3_traj = calc_trajectory(*starting_pos, angle=starting_angle)
+l3_traj = Line2D.from_pos_angle(starting_pos, starting_angle)
+
 
 l3_traj.create_data(start=0, stop=50, num=100)
 
 calc_scattering(l3_traj, 2)
+
+
+def calc_scattering(Line2D, N):
+
+    return Line2D
+
 
 plot()
