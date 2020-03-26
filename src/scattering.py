@@ -44,7 +44,7 @@ class Line2D:
         return cls(m, c, angle)
 
     @classmethod
-    def from_pos_angle(cls, pos, angle):
+    def from_pos_angle(cls, pos, angle, deg=False):
         """
         Create a line from a position and angle.
 
@@ -55,6 +55,8 @@ class Line2D:
         angle : float
             Angle in radians.
         """
+        if deg:
+            angle = d2r(angle)
         x, y = pos
         m = np.tan(angle)
         c = y - m*x
@@ -78,7 +80,7 @@ class Line2D:
     def plot(self, **kwargs):
         plt.plot(self.xdata, self.ydata, **kwargs)
 
-    def reflect(self, Line2D):
+    def reflect_line(self, Line2D):
         """
         Calculate new path after reflection off a line.
 
@@ -97,6 +99,12 @@ class Line2D:
 
 
         return Line2D
+
+    def reflect_point(self, pos, angle):
+        if self.direction == None:
+            print(f'{Line2D} has no direction!')
+
+        return
 
 
 def calc_gradient(angle, deg=False):
@@ -129,100 +137,6 @@ def calc_trajectory(x, y, angle):
     trajectory = Line2D.from_function(m=m, c=c)
     return trajectory
 
-
-# scattering_positions = [[x,y]], [x1,y1] + ...
-# scattering_lines = [Line2D, Line2D] + ...
-
-def calc_scattering(Line2D, N):
-    for i in range(N):
-        scattering_positions = calc_scattering_positions(Line2D, N)
-        scattering_paths = calc_scattering_path(Line2D, N)
-
-
-def calc_scattering_positions(Line2D, N, keep=True):
-    """
-    Parameters
-    ----------
-    Line2D : Line2D
-        Starting path
-    N : int
-        Nth scatter
-    keep : bool
-        Return all scatters or just last.
-
-    Returns
-    -------
-    scattering_position : list
-        [x,y]
-    """
-    traj = Line2D
-
-    l1
-
-    traj = l3_traj
-    traj.set_x_direction('x+')
-    t.plot()
-
-    l1_int = find_intersection(traj, l1)
-    l2_int = find_intersection(traj, l2)
-
-    collisions = determine_collision(l1_int, l2_int)
-
-    calc_new_path = Line2D.reflect(l1_int)
-
-
-    plt.scatter(*scattering_positions[0])
-    plt.scatter(*scattering_positions[1])
-
-    l1.plot()
-    l2.plot()
-    l3_traj.plot()
-
-    if keep:
-        return scattering_positions
-    else:
-        return scattering_positions[-1]
-# =============================================================================
-#
-# =============================================================================
-    for n in range(N):
-        print(f'Scattering #{n}')
-
-        l1_int = find_intersection(trajectory, l1)
-        l2_int = find_intersection(trajectory, l2)
-
-        print('l1 intersection:', l1_int)
-        print('l2 intersection:', l2_int)
-
-        # plt.scatter(*l1_int, label='l1_intersection')
-        # plt.scatter(*l2_int, label='l2_intersection')
-
-        angle = angle_between(trajectory, l2)
-        print('old trajectory angle:', trajectory.angle)
-
-        print('angle between tracjecory and l2:', angle)
-
-        angle = calc_new_angle(trajectory.angle, 2*angle)
-
-        print('new_angle:', angle)
-
-        trajectory = Line2D.from_pos_angle(l1_int, angle)
-
-        scattering_positions.append(l1_int)
-        trajectory.create_data(start=l1_int[0], stop=50, num=100)
-        trajectory.plot(label='traj')
-        print(f'Trajectory {trajectory}')
-        print('=======')
-
-    return scattering_position
-
-
-
-
-
-# =============================================================================
-#
-# =============================================================================
 def calc_new_angle(angle, by):
     return angle + by
 
@@ -285,40 +199,76 @@ def angle_between(line1, line2):
     return angle
 
 
-
 def plot():
-    l1.plot(label='l1', c='b')
+    l1.plot(label='l1', c='g')
     l2.plot(label='l2', c='b')
 
-    l3_traj.plot(label='l3', c='r')
-    
     plt.scatter(*starting_pos, label='starting pos')
     
     plt.legend()
     plt.show()
 
 
-l1 = Line2D.from_function(m=1, c=0)
-l2 = Line2D.from_function(m=0.25, c=0)
-
-l1.create_data(start=0, stop=50, num=100)
-l2.create_data(start=0, stop=50, num=100)
-
-starting_pos = [3, l2.func(3)]
-
-starting_angle = 30 #degs
-
-l3_traj = Line2D.from_pos_angle(starting_pos, starting_angle)
+def determine_collision(*intersections):
+    x = 0
+    for i in intersections:
+        x_new = i[0]
+        print(x, x_new)
+        if x_new > x:
+            x = x_new
+            intersection = i
+    return intersection
 
 
-l3_traj.create_data(start=0, stop=50, num=100)
-
-calc_scattering(l3_traj, 2)
 
 
-def calc_scattering(Line2D, N):
 
-    return Line2D
+if __name__ == "__main__":
+    # Create boundries
+    l1 = Line2D.from_function(m=1, c=0)
+    l2 = Line2D.from_function(m=0.25, c=0)
 
+    # Create boundry datapoints
+    l1.create_data(start=0, stop=50, num=100)
+    l2.create_data(start=0, stop=50, num=100)
 
-plot()
+    #Choose starting position and direction
+    starting_x = 3
+    starting_y = l2.func(starting_x)
+    starting_pos = [starting_x, starting_y]
+    starting_angle = 60 #degs
+
+    # Create trajectory
+    traj = Line2D.from_pos_angle(starting_pos, starting_angle, deg=True)
+    traj.create_data(start=0, stop=50, num=100)
+    traj.set_x_direction('x+')
+
+    # Find intersections with boundries
+    l1_int = find_intersection(traj, l1)
+    l2_int = find_intersection(traj, l2)
+
+    # Determine which point was a collision
+
+    collision_pos = determine_collision(l1_int, l2_int)
+    collision_path = None
+
+    # determine which surface to collide with
+
+    # Calculate new path
+    # reflection can be off a line or plane where \theta = \theta'
+
+    angle_between = angle_between(l1, traj)
+    new_angle = 2*np.pi - (l1.angle +angle_between)
+    new_path = Line2D.from_pos_angle(collision_pos, new_angle, deg=False)
+    new_path.create_data(start=0, stop=50, num=100)
+
+    new_path.plot(label='new_path')
+
+    plt.scatter(*l1_int, label='l1_int')
+    plt.scatter(*l2_int, label='l2_int')
+    traj.plot(label='trajectory', c='r')
+    plt.xlim([0, 50])
+    plt.ylim([-10, 60])
+    plt.legend()
+
+    plot()
